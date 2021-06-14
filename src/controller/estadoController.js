@@ -1,81 +1,70 @@
 const client = require('../database.js');
 
 function postEstado(req, res) {
-    const { nombre, descripcion } = req.body;
-    const query = `insert into estado(nombre,descripcion) values (?,?);
+    const { nombreestado, claveestado, nacionalidadid, claveestadoburo } = req.body;
+    const query = `insert into catalogo_estado(nombreestado, claveestado, nacionalidadid, claveestadoburo) VALUES ($1,$2,$3,$4)
     `;
-    database.query(query, [nombre, descripcion],
-        (err, rows, fields) => {
-            if (!err) {
-                res.status(200).send({
-                    status: 'estado guardado',
-                    id: rows.insertId,
-                    nombre,
-                    descripcion
-                });
-            } else {
-                res.status(500).send({ message: err })
-            }
+    client.query(query, [nombreestado, claveestado, nacionalidadid, claveestadoburo], (error, results) => {
+        if (error) {
+            throw error
         }
-    );
+        res.status(201).send('201 Creado')
+    })
 }
 
 function getAllEstado(req, res) {
-    client.connect()
-    client.query('SELECT * FROM catalogo_estado')
-        .then(response => {
-            res.status(200).send(response.rows)
-            client.end()
-        })
-        .catch(err => {
-            res.status(500).send({ err })
-            client.end()
-        })
+    client.query('SELECT * FROM catalogo_estado', [], (error, results) => {
+        if (error) {
+            res.status(500).send({ error })
+        }
+        res.status(200).json(results.rows)
+    });
 }
 
 function getOneEstado(req, res) {
-    const { id } = req.params;
-    database.query('SELECT * FROM estado WHERE id = ?', [id], (err, rows, fields) => {
-        if (!err) {
-            if (rows.length != 0) {
-                res.status(200).send(rows[0])
-            } else
-                res.status(404).send({ message: 'estado not found' })
-        } else {
-            res.status(500).send({ message: err })
+    const { estadoid } = req.params;
+    client.query('SELECT * FROM catalogo_estado WHERE estadoid = $1', [estadoid], (error, results) => {
+        if (error) {
+            res.status(500).send({ error })
         }
+        res.status(200).json(results.rows[0])
     });
 }
 
 function deleteEstado(req, res) {
-    const { id } = req.params;
-    database.query('DELETE FROM estado WHERE id = ?', [id], (err, rows, fields) => {
-        if (!err) {
-            res.status(200).send({ status: 'estado deleted: ' + id });
-        } else {
-            res.status(500).send({ message: err })
+    const { estadoid } = req.params;
+    client.query('DELETE FROM catalogo_estado WHERE estadoid = $1', [estadoid], (error, results) => {
+        if (error) {
+            res.status(500).send({ error })
         }
+        res.status(201).send('204 No Content')
     });
 }
 
 function putEstado(req, res) {
-    const { nombre, descripcion } = req.body;
-    const { id } = req.params;
+    const { nombreestado, claveestado, nacionalidadid, claveestadoburo } = req.body;
+    const { estadoid } = req.params;
+
     const query = `
-    update estado set nombre = ?, descripcion = ? where id = ?;
-  `;
-    database.query(query, [nombre, descripcion, id], (err, rows, fields) => {
-        if (!err) {
-            res.status(200).send({
-                status: 'estado Updated',
-                id,
-                nombre,
-                descripcion
-            });
-        } else {
-            res.status(500).send({ message: err })
+    UPDATE catalogo_estado 
+    SET 
+    nombreestado = $1, 
+    claveestado = $2,
+    nacionalidadid = $3, 
+    claveestadoburo = $4
+    WHERE estadoid = $5;
+    `;
+
+    client.query(
+        query, [nombreestado, claveestado, nacionalidadid, claveestadoburo, estadoid],
+        (error, results) => {
+            if (error) {
+                throw error
+            }
+            res.status(200).send(`Estado modificado con ID: ${estadoid}`)
         }
-    });
+    )
+
 }
 
 module.exports = {
