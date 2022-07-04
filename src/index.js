@@ -1,10 +1,11 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
-
+const cors = require('cors')
 
 // Settings
 app.set('port', process.env.PORT || 3000);
+app.use(cors())
 
 // Midactordlewares
 app.use(bodyParser.json());
